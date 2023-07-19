@@ -1,0 +1,111 @@
+'Logic Test
+'V1.20190304.05
+'Feedback- Shaeed (Shaeed.Khan@honeywell.com)
+'------------------------------
+'
+'Given logic
+'-------------
+'IF (((set_unit_mode = 'TA') OR (set_unit_mode = 'TA/RA')) AND (set_unit_mode_SSM = 'Self_Test') AND (selected_Transponder = 'Transponder1') AND (Label_203 = 'INVALID'))
+'THEN
+'Label_350_Bit16 SET 1
+'ELSE
+'Label_350_Bit17 SET 0
+'ENDIF
+'
+'Processed logic
+'----------------
+'if ((((A |1 A2) &2 B) &3 C) &4 D)
+'{
+'   BLK1-T
+'}
+'else
+'{
+'   BLK1-F
+'}
+'
+'-------------------------
+'Keys
+'-------------------------
+'   A - set_unit_mode = 'TA'
+'  A2 - set_unit_mode = 'TA/RA'
+'   B - set_unit_mode_SSM = 'Self_Test'
+'   C - selected_Transponder = 'Transponder1'
+'   D - Label_203 = 'INVALID'
+'
+'-------------------------
+'Parameters
+'-------------------------
+'  P1 - selected_Transponder
+'  P2 - set_unit_mode_SSM
+'  P3 - Label_203
+'  P4 - set_unit_mode
+'
+'-------------------------
+'Statements
+'-------------------------
+'  BLK1-T - Label_350_Bit16 SET 1
+'  BLK1-F - Label_350_Bit17 SET 0
+'
+'-------------------------
+'Truth Table
+'-------------------------
+'Test No. P1  P2  P3  P4  A   A2  B   C   D   Statement
+'------------------------------------------------------
+'    1    0   0   0   1    F   F   T   T   T    -- *[A2] {A, A2- False [BLK1]}{&2FT |1FF &3FT &4FT} 
+'    2    0   0   null0    T   F   T   T   F    -- *[D] {D- False [BLK1]}{&4TF} 
+'    3    0   0   0   1    F   T   T   T   T    BLK1-T {A2, B, C, D- True [BLK1]}{&2TT |1FT &3TT &4TT} 
+'    4    null0   0   0    T   F   T   F   T    -- *[C] {C- False [BLK1]}{&3TF} 
+'    5    0   null0   0    T   F   F   T   T    -- *[B] {B- False [BLK1]}{&2TF} 
+'    6    0   0   0   0    T   F   T   T   T    BLK1-T {A- True [BLK1]}{|1TF} 
+'
+'-------------------------
+'Test cases
+'-------------------------
+
+'--------------------------------------
+'Test No. A   A2  B   C   D   Statement
+'    1    F   F   T   T   T    -- [A2]
+'--------------------------------------
+'This test case is not possible. Mutually exclusive for A2.
+
+'--------------------------------------
+'Test No. A   A2  B   C   D   Statement
+'    2    T   F   T   T   F    -- [D]
+'--------------------------------------
+'This test case is not possible. Mutually exclusive for D.
+
+'--------------------------------------
+'Test No. A   A2  B   C   D   Statement
+'    3    F   T   T   T   T    BLK1-T
+'--------------------------------------
+selected_Transponder : 0
+set_unit_mode_SSM : 0
+Label_203 : 0
+set_unit_mode : 1
+
+Label_350_Bit16 SET 1
+
+'--------------------------------------
+'Test No. A   A2  B   C   D   Statement
+'    4    T   F   T   F   T    -- [C]
+'--------------------------------------
+'This test case is not possible. Mutually exclusive for C.
+
+'--------------------------------------
+'Test No. A   A2  B   C   D   Statement
+'    5    T   F   F   T   T    -- [B]
+'--------------------------------------
+'This test case is not possible. Mutually exclusive for B.
+
+'--------------------------------------
+'Test No. A   A2  B   C   D   Statement
+'    6    T   F   T   T   T    BLK1-T
+'--------------------------------------
+selected_Transponder : 0
+set_unit_mode_SSM : 0
+Label_203 : 0
+set_unit_mode : 0
+
+Label_350_Bit16 SET 1
+
+'

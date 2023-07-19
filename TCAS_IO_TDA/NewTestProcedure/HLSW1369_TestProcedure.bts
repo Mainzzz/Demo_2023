@@ -1,0 +1,213 @@
+'
+'Given logic
+'-------------
+'IF (set_unit_mode = 'TA') OR (set_unit_mode = 'TA/RA')
+'THEN
+'IF (set_unit_mode_SSM = 'Self-Test')
+'THEN
+'IF (selected_Transponder = 'Transponder1')
+'THEN
+'IF (Label_203=1)
+'THEN
+'Label_350_bit_16 SET 1
+'ENDIF
+'ENDIF
+'ENDIF
+'ENDIF
+'
+'Processed logic
+'----------------
+'if (A |1 A2)
+'{
+'   if B
+'   {
+'      if C
+'      {
+'         if D
+'         {
+'            BLK4-T
+'         }
+'      }
+'   }
+'}
+'
+'-------------------------
+'Keys
+'-------------------------
+'   A - set_unit_mode = 'TA'
+'  A2 - set_unit_mode = 'TA/RA'
+'   B - set_unit_mode_SSM = 'Self-Test'
+'   C - selected_Transponder = 'Transponder1'
+'   D - Label_203=1
+'
+'-------------------------
+'Statements
+'-------------------------
+'  BLK4-T - Label_350_bit_16 SET 1
+'
+'-------------------------
+'Truth Table
+'-------------------------
+'Test No. A   A2  B   C   D   Statement
+'--------------------------------------
+'    1    F   F   X   X   X    -- *[A2, #] { [BLK1]}{|1FF}
+'    2    F   T   T   T   T    BLK4-T {A2- True [BLK1]}{|1FT}
+'    3    T   F   T   T   T    BLK4-T {A- True [BLK1]}{|1TF}
+'   *4    T   F   T   T   T    BLK4-T {A- True [BLK1]}{} [4=3]
+'   *5    F   T   T   T   T    BLK4-T {A- False [BLK1]}{} [5=2]
+'   *6    F   T   T   T   T    BLK4-T {A2- True [BLK1]}{} [6=2, 6=5]
+'   *7    T   F   T   T   T    BLK4-T {A2- False [BLK1]}{} [7=3, 7=4]
+'   *8    F   T   T   T   T    BLK4-T {B- True [BLK2]}{} [8=2, 8=5, 8=6]
+'    9    X   X   F   X   X    -- *[#, B] {B- False [BLK2]}{}
+'  *10    F   T   T   T   T    BLK4-T {C- True [BLK3]}{} [10=2, 10=5, 10=6, 10=8]
+'   11    X   X   X   F   X    -- *[#, C] {C- False [BLK3]}{}
+'  *12    F   T   T   T   T    BLK4-T {D- True [BLK4]}{} [12=2, 12=5, 12=6, 12=8, 12=10]
+'   13    F   T   T   T   F    Statement not defined {D- False [BLK4]}{}
+'
+'-------------------------
+'========================Test Case Description===============================
+
+Test Case Name: HLSW1369_TC_01
+Test Case Section:
+'--------------------------------------
+
+'Test No. A   A2  B   C   D   Statement
+
+'    2    F   T   T   T   T    BLK4-T
+
+'--------------------------------------
+
+selected_Transponder : 0
+
+set_unit_mode_SSM : 0
+
+Label_203 : 1
+
+set_unit_mode : 1
+
+
+
+Label_350_bit_16 SET 1
+
+
+
+'--------------------------------------
+
+'Keys In Test Case:
+'   selected_Transponder:
+'     Type: function_call
+'     DataType: enum
+'     Resolution: N/A
+'     Value: Transponder1
+'   set_unit_mode_SSM:
+'     Type: function_call
+'     DataType: enum
+'     Resolution: N/A
+'     Value: Self_Test
+'   Label_203:
+'     Type: internal
+'     DataType: enum
+'     Resolution: N/A
+'     Value: INVALID
+'     Command: ['//Set Label_203 INVALID', 'set UNBARALT2 fw \n']
+'   set_unit_mode:
+'     Type: function_call
+'     DataType: enum
+'     Resolution: N/A
+'     Value: TA
+'----------------------------------------------
+
+'Statements in Test Case :
+'   ('Label_350_bit_16', {'value': '1', 'cv_name': 'tcasLabel350Bit16', 'command': ['DELAY 1000', 'test if tcasLabel350Bit16 EQ 1']}): 
+'========================End of Test Case Description===============================
+
+
+
+'***************Excutable Commands of Test Case****************************
+
+//Set Label_203 INVALID 
+set UNBARALT2 fw 
+ 
+'-------------------------------------
+
+DELAY 1000 
+
+test if tcasLabel350Bit16 EQ 1 
+
+'****************End of Excutable Commands of Test Case********************
+
+
+
+'========================Test Case Description===============================
+
+Test Case Name: HLSW1369_TC_02
+Test Case Section:
+'--------------------------------------
+
+'Test No. A   A2  B   C   D   Statement
+
+'    3    T   F   T   T   T    BLK4-T
+
+'--------------------------------------
+
+selected_Transponder : 0
+
+set_unit_mode_SSM : 0
+
+Label_203 : 1
+
+set_unit_mode : 0
+
+
+
+Label_350_bit_16 SET 1
+
+
+
+'--------------------------------------
+
+'Keys In Test Case:
+'   selected_Transponder:
+'     Type: function_call
+'     DataType: enum
+'     Resolution: N/A
+'     Value: Transponder1
+'   set_unit_mode_SSM:
+'     Type: function_call
+'     DataType: enum
+'     Resolution: N/A
+'     Value: Self_Test
+'   Label_203:
+'     Type: internal
+'     DataType: enum
+'     Resolution: N/A
+'     Value: INVALID
+'     Command: ['//Set Label_203 INVALID', 'set UNBARALT2 fw \n']
+'   set_unit_mode:
+'     Type: function_call
+'     DataType: enum
+'     Resolution: N/A
+'     Value: TA
+'----------------------------------------------
+
+'Statements in Test Case :
+'   ('Label_350_bit_16', {'value': '1', 'cv_name': 'tcasLabel350Bit16', 'command': ['DELAY 1000', 'test if tcasLabel350Bit16 EQ 1']}): 
+'========================End of Test Case Description===============================
+
+
+
+'***************Excutable Commands of Test Case****************************
+
+//Set Label_203 INVALID 
+set UNBARALT2 fw 
+ 
+'-------------------------------------
+
+DELAY 1000 
+
+test if tcasLabel350Bit16 EQ 1 
+
+'****************End of Excutable Commands of Test Case********************
+
+
+

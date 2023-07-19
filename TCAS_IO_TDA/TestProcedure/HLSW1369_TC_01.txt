@@ -1,0 +1,13 @@
+//'--------------------------------------
+//'Test No. A   A2  B   C   D   Statement
+//'    2    F   T   T   T   T    BLK4-T
+//'--------------------------------------
+//selected_Transponder : 0
+//set_unit_mode_SSM : 0
+//Label_203 : 1
+//set_unit_mode : 1
+//
+//Label_350_bit_16 SET 1
+//
+//'--------------------------------------
+
