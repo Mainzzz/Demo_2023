@@ -2,6 +2,7 @@ import csv
 import json
 import os
 import re
+import TCAS_IO_Utility as tio_util
 column_SysName = 4  # the column index of SysNamePhrase in Data_Dictionary.csv
 column_CvtName = 1  # the column index of CvtName in Data_Dictionary.csv
 
@@ -148,6 +149,7 @@ class LogicFileProcessor:
                     self.keys[variable] = None        
     
     def add_operation_command_to_keys(self)->None:
+        tcas_io_util = tio_util()
         for variable in self.keys:
             var = self.keys[variable]
             var_type = var['Type']
@@ -155,7 +157,8 @@ class LogicFileProcessor:
                 if "Label" in variable:
                     var['Command'] = self.get_command_of_label(variable)
             elif var_type == 'function_call':
-                continue
+                if "selected_Transponder" in variable:
+                    var['Command'] = tcas_io_util.get_command_of_select_transponder(variable)
                     # var['Command'] = self.get_command_of_common_section()
 
     def get_command_of_label(self,variable):

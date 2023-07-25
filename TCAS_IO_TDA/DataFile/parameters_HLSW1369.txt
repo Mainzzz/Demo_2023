@@ -15,7 +15,7 @@
 # Fill the missing information below (Some known values are already filled. If anything is incorrect, Please feel free to update it.)-
 # <Param>:<DataType>:<Type>:<range/enums>:<Resolution>
 
-selected_Transponder : enum : function_call : 'Transponder1'-0 : N/A
+selected_Transponder : enum : function_call : 'Transponder1'-0 :'Transponder2'-1 : N/A
 set_unit_mode_SSM : enum : function_call : 'Self_Test'-0 : N/A
 Label_203 : enum : internal : 'VALID'-0, 'INVALID'-1 : N/A
 set_unit_mode : enum : function_call : 'TA'-0, 'TA/RA'-1 : N/A
