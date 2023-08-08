@@ -1,0 +1,131 @@
+'Logic Test
+'V1.20190304.05
+'Feedback- Shaeed (Shaeed.Khan@honeywell.com)
+'------------------------------
+'
+'Given logic
+'-------------
+'IF (((unit_mode = 'TA') OR (unit_mode = 'TA/RA')) AND (unit_mode_SSM = 'Self-Test') AND (Mode-S Transponder = 'Transponder #1') AND (Label 203 = 'INVALID'))
+'THEN
+'set Label 350 bit 16 to 1
+'ELSE
+'set Label 350 bit 16 to 0
+'ENDIF
+'
+'Processed logic
+'----------------
+'if ((((A |1 A2) &2 B) &3 C) &4 D)
+'{
+'   BLK1-T
+'}
+'else
+'{
+'   BLK1-F
+'}
+'
+'-------------------------
+'Keys
+'-------------------------
+'   A - unit_mode = 'TA'
+'  A2 - unit_mode = 'TA/RA'
+'   B - unit_mode_SSM = 'Self-Test'
+'   C - Mode-S Transponder = 'Transponder #1'
+'   D - Label 203 = 'INVALID'
+'
+'-------------------------
+'Parameters
+'-------------------------
+'  P1 - unit_mode
+'  P2 - unit_mode_SSM
+'  P3 - Label 203
+'  P4 - Mode-S Transponder
+'
+'-------------------------
+'Statements
+'-------------------------
+'  BLK1-T - set Label 350 bit 16 to 1
+'  BLK1-F - set Label 350 bit 16 to 0
+'
+'-------------------------
+'Truth Table
+'-------------------------
+'Test No. P1  P2  P3  P4   A   A2  B   C   D   Statement
+'-------------------------------------------------------
+'    1    2   1   0   1    F   F   T   T   T    BLK1-F {A, A2- False [BLK1]}{&2FT |1FF &3FT &4FT} 
+'    2    0   1   1   1    T   F   T   T   F    BLK1-F {D- False [BLK1]}{&4TF} 
+'    3    1   1   0   1    F   T   T   T   T    BLK1-T {A2, B, C, D- True [BLK1]}{&2TT |1FT &3TT &4TT} 
+'    4    0   1   0   2    T   F   T   F   T    BLK1-F {C- False [BLK1]}{&3TF} 
+'    5    0   0   0   1    T   F   F   T   T    BLK1-F {B- False [BLK1]}{&2TF} 
+'    6    0   1   0   1    T   F   T   T   T    BLK1-T {A- True [BLK1]}{|1TF} 
+'
+'-------------------------
+'Test cases----*****
+'-------------------------
+
+'--------------------------------------
+'Test No. A   A2  B   C   D   Statement
+'    1    F   F   T   T   T    BLK1-F
+'--------------------------------------
+unit_mode : Other
+unit_mode_SSM : Self-Test
+Label 203 : INVALID
+Mode-S Transponder : Transponder #1
+
+set Label 350 bit 16 to 0
+
+'--------------------------------------
+'Test No. A   A2  B   C   D   Statement
+'    2    T   F   T   T   F    BLK1-F
+'--------------------------------------
+unit_mode : TA
+unit_mode_SSM : Self-Test
+Label 203 : VALID
+Mode-S Transponder : Transponder #1
+
+set Label 350 bit 16 to 0
+
+'--------------------------------------
+'Test No. A   A2  B   C   D   Statement
+'    3    F   T   T   T   T    BLK1-T
+'--------------------------------------
+unit_mode : TA/RA
+unit_mode_SSM : Self-Test
+Label 203 : INVALID
+Mode-S Transponder : Transponder #1
+
+set Label 350 bit 16 to 1
+
+'--------------------------------------
+'Test No. A   A2  B   C   D   Statement
+'    4    T   F   T   F   T    BLK1-F
+'--------------------------------------
+unit_mode : TA
+unit_mode_SSM : Self-Test
+Label 203 : INVALID
+Mode-S Transponder : Transponder #2
+
+set Label 350 bit 16 to 0
+
+'--------------------------------------
+'Test No. A   A2  B   C   D   Statement
+'    5    T   F   F   T   T    BLK1-F
+'--------------------------------------
+unit_mode : TA
+unit_mode_SSM : None
+Label 203 : INVALID
+Mode-S Transponder : Transponder #1
+
+set Label 350 bit 16 to 0
+
+'--------------------------------------
+'Test No. A   A2  B   C   D   Statement
+'    6    T   F   T   T   T    BLK1-T
+'--------------------------------------
+unit_mode : TA
+unit_mode_SSM : Self-Test
+Label 203 : INVALID
+Mode-S Transponder : Transponder #1
+
+set Label 350 bit 16 to 1
+
+'

@@ -2,19 +2,20 @@ import csv
 import json
 import os
 import re
-import TCAS_IO_Utility as tio_util
+
 column_SysName = 4  # the column index of SysNamePhrase in Data_Dictionary.csv
 column_CvtName = 1  # the column index of CvtName in Data_Dictionary.csv
 
 class LogicFileProcessor:
     def __init__(self):
-        self.logic_file_path = ".\DataFile\HLSW1369_LogicOut_new.txt"
-        self.parameter_file_path = '.\DataFile\parameters_HLSW1369.txt'
-        self.bif_file_path = ".\DataFile\TXDTS_DXF.BIF"
-        self.csv_file_path = '.\DataFile\Data_Dictionary.csv'
+        ablolute_directory = os.path.dirname(os.path.abspath(__file__))
+        self.logic_file_path = os.path.join(ablolute_directory, 'DataFile', 'Logic_Out0.txt')
+        self.parameter_file_path = os.path.join(ablolute_directory, 'DataFile', 'parameters.txt')
+        self.bif_file_path = os.path.join(ablolute_directory, 'DataFile', 'TXDTS_DXF.BIF')
+        self.csv_file_path = os.path.join(ablolute_directory, 'DataFile', 'Data_Dictionary.csv')
         # self.tp_folder_path = '.\NewTestProcedure'         
         self.req_num = None
-        self.tp_file_name = None            
+        self.tp_file_name = os.path.join(ablolute_directory, 'NewTestProcedure', 'TCAS_RBLT_TestProcedure.bts')            
         self.parameter_map = {}  
         self.bif_map = {}
         self.selected_tc_index = []
@@ -149,7 +150,8 @@ class LogicFileProcessor:
                     self.keys[variable] = None        
     
     def add_operation_command_to_keys(self)->None:
-        tcas_io_util = tio_util()
+        import TCAS_IO_Utility as tio_util
+        tiou = tio_util()
         for variable in self.keys:
             var = self.keys[variable]
             var_type = var['Type']
@@ -158,8 +160,10 @@ class LogicFileProcessor:
                     var['Command'] = self.get_command_of_label(variable)
             elif var_type == 'function_call':
                 if "selected_Transponder" in variable:
-                    var['Command'] = tcas_io_util.get_command_of_select_transponder(variable)
-                    # var['Command'] = self.get_command_of_common_section()
+                    var['Command'] = tiou.get_command_of_select_transponder(variable)
+                elif "Label" in variable:
+                    var['Command'] = tiou.get_command_of_label(variable)
+                    
 
     def get_command_of_label(self,variable):
         label_command = []
@@ -204,8 +208,8 @@ class LogicFileProcessor:
         return cv_verify_command
             
     def wr_TPDescription_to_tp_file(self):
-        tp_name = "TestResult_TestProcedure" + ".bts"
-        self.tp_file_name = os.path.join(r'.\NewTestProcedure' , tp_name)
+        #tp_name = "TCAS_RBLT_TestProcedure" + ".bts"
+        #self.tp_file_name = os.path.join(r'./TCAS_IO_TDA/NewTestProcedure' , tp_name)
         if os.path.exists(self.tp_file_name):
             os.remove(self.tp_file_name)        
         with open(self.tp_file_name, 'a') as tp:
@@ -259,6 +263,13 @@ class LogicFileProcessor:
         
     def process_file(self):
         # Call the functions in sequence to perform the entire process
+        # Print current working directory
+        script_directory = os.path.dirname(os.path.abspath(__file__))
+        print("Current working directory1:", os.getcwd())
+        print("Absolute working directory:", script_directory)        
+        print("logic_file_path :", self.logic_file_path)
+        os.chdir(script_directory)
+        print("Current working directory2:", os.getcwd())
         self.build_parameter_map()
         self.buid_BIF_map()        
         self.select_lines_contains_useful_tc()

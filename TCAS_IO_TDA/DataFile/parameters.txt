@@ -1,0 +1,21 @@
+# Parameters information file
+# Any line start with '#' (Hash) symbol is commented line. It will be ignored by parser.
+
+# Mention the min and max value like 'min, max'. Ex -100, 100
+# In case of int or float data type, mention resolution also. If no resolution provided, 1 will be assumed.
+# Mention all the possible enums separated by comma (,). [Enum index separated by hyphen (-) symbol.]
+
+# Possible values:
+# DataType - boolean, enum, int, float
+# Type - internal, global, function_call
+
+# Example-
+# dcPrimaryNavSource : enum : global : 'VOR/LOC1'-0, 'VOR/LOC2'-1, 'TCN'-2, 'FMS1'-3, 'FMS2'-4
+
+# Fill the missing information below (Some known values are already filled. If anything is incorrect, Please feel free to update it.)
+# <Param>:<DataType>:<Type>:<range/enums>:<Resolution>
+
+Mode-S Transponder : enum : function_call : 'Transponder #1'-1,'Transponder #2'-2 : N/A
+unit_mode_SSM : enum : function_call : 'None'-0, 'Self-Test'-1 : N/A
+Label 203 : enum : function_call : 'INVALID'-0, 'VALID'-1 : N/A
+unit_mode : enum : function_call : 'TA'-0, 'TA/RA'-1,'Other'-2 : N/A
