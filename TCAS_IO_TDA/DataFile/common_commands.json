@@ -1,0 +1,22 @@
+{
+	"Label 203": {
+		"INVALID": "set UNBARALT2 fw",
+		"VALID": "set UNBARALT2 NORMAL"
+	},
+        
+    "Mode-S Transponder": {
+        "Transponder #1": "set XPDR1_276 NORMAL",
+        "Transponder #2": "set XPDR1_276 fw"
+    },
+	
+	"unit_mode_SSM": {
+		"Self-Test": "set T2016SNSLVL 1",
+        "None": "set T2016SNSLVL 0"
+	},
+	
+	"unit_mode": {
+		"TA": "set T2016SNSLVL 1",
+        "TA/RA": "set T2016SNSLVL 0",
+        "Other": "set T2016SNSLVL 0"
+	}
+}

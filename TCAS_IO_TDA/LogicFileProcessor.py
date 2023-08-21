@@ -2,6 +2,7 @@ import csv
 import json
 import os
 import re
+from TCAS_IO_Utility import TCAS_IO_Utility
 
 column_SysName = 4  # the column index of SysNamePhrase in Data_Dictionary.csv
 column_CvtName = 1  # the column index of CvtName in Data_Dictionary.csv
@@ -11,6 +12,7 @@ class LogicFileProcessor:
         ablolute_directory = os.path.dirname(os.path.abspath(__file__))
         self.logic_file_path = os.path.join(ablolute_directory, 'DataFile', 'Logic_Out0.txt')
         self.parameter_file_path = os.path.join(ablolute_directory, 'DataFile', 'parameters.txt')
+        self.command_file_path = os.path.join(ablolute_directory, 'DataFile', 'common_commands.json')
         self.bif_file_path = os.path.join(ablolute_directory, 'DataFile', 'TXDTS_DXF.BIF')
         self.csv_file_path = os.path.join(ablolute_directory, 'DataFile', 'Data_Dictionary.csv')
         # self.tp_folder_path = '.\NewTestProcedure'         
@@ -23,6 +25,10 @@ class LogicFileProcessor:
         self.TPDescription = {}
         self.keys = {}
         self.statements = {}
+        
+    def load_commands(self, filename):
+        with open(filename, 'r') as f:
+            return json.load(f)    
         
     def build_parameter_map(self):
         with open(self.parameter_file_path, 'r') as file:
@@ -60,10 +66,19 @@ class LogicFileProcessor:
                     "LABEL" in line and 
                     "BITS" not in line):
                     bif_signal_name = line.split("SIG")[1].split()[0].strip()
-                    bif_var_name = "Label_" + line.split("LABEL")[1].split()[0].strip()
+                    bif_var_name = "Label " + line.split("LABEL")[1].split()[0].strip()
                     self.bif_map[bif_var_name] = {'signal': bif_signal_name}
                     bif_keyword_index.append(index)
-            
+     
+    def remove_duplicates_preserve_order(self,arr):
+        seen = set()
+        result = []
+        for num in arr:
+            if num not in seen:
+                seen.add(num)
+                result.append(num)
+        return result
+           
     def select_lines_contains_useful_tc(self):
         with open(self.logic_file_path, 'r') as file:
             content = file.readlines()
@@ -76,12 +91,15 @@ class LogicFileProcessor:
         for i in range(len(tc_lines_index) - 1):
             p_start = tc_lines_index[i]
             p_end = tc_lines_index[i+1]
-            find_set_flag = any("SET" in line for line in content[p_start:p_end])
+            find_set_flag = any("set" in line for line in content[p_start:p_end])
             if find_set_flag:
                 self.selected_tc_index.append(p_start)
                 self.selected_tc_index.append(p_end)
-        self.selected_tc_index = list(set(self.selected_tc_index))  
-
+        print("selected_tc_index1:", self.selected_tc_index)  
+        self.selected_tc_index = self.remove_duplicates_preserve_order(self.selected_tc_index)  
+        print("selected_tc_index2:", self.selected_tc_index) 
+    
+    
     def save_TCGroup(self):
         # self.req_num = re.search(r'HLSW(\d+)', self.logic_file_path).group()
         with open(self.logic_file_path, 'r') as file:
@@ -93,7 +111,7 @@ class LogicFileProcessor:
             p_start = self.selected_tc_index[i]
             p_end = self.selected_tc_index[i+1]
             tc_counter = i+1
-            tc_name = 'TC_0' + str(tc_counter)
+            tc_name = self.tp_file_name + str(tc_counter)
             # tc_file_name = os.path.join(self.file_path, tc_name)
             section = content[p_start - 1:p_end]  
             self.TCGroup[tc_name] = {}
@@ -110,7 +128,9 @@ class LogicFileProcessor:
             if "Test cases" in line:
                 des_end_line = index
         des_section = content[des_start_line - 1:des_end_line] 
-        self.TPDescription = des_section
+        # Add "//" to the beginning of each line
+        des_section_with_comments = ["// " + line for line in des_section]
+        self.TPDescription = des_section_with_comments
         
     def extract_keys_statements_from_TCGroup(self):
         for tc_name in self.TCGroup:
@@ -123,12 +143,18 @@ class LogicFileProcessor:
                     self.keys[variable] = value 
                     self.TCGroup[tc_name]['keys'] = self.keys
                 elif "set" in tc_content[line]: 
-                    statement_variable, statement_value = tc_content[line].split(' SET ')
-                    variable = statement_variable.strip() 
-                    value = statement_value.strip()
-                    self.statements.setdefault(variable, {})['value'] = value
+                    if " to " in tc_content[line]:
+                        statement_variable, st_value= tc_content[line].split(' to ')
+                        variable_parts = statement_variable.split('set ')
+                        st_variable = variable_parts[1].strip()
+                    else:
+                        statement_variable, statement_value = tc_content[line].split(' set ')
+                        variable = statement_variable.strip()
+                        value = statement_value.strip()
+                    self.statements.setdefault(st_variable, {})['value'] = st_value
                     self.TCGroup[tc_name]['statements'] = self.statements
-                    
+    
+    #this function is used to map values and add elements to variables  according to parameters.txt               
     def map_keys_with_para(self)->None:
         for variable, value in self.keys.items(): 
             para_variable = self.parameter_map[variable]
@@ -139,6 +165,8 @@ class LogicFileProcessor:
             self.keys[variable]['Type'] = para_var_type
             self.keys[variable]['DataType'] = para_var_data_type
             self.keys[variable]['Resolution'] = para_Resolution
+            self.keys[variable]['Value'] = value
+            '''
             if para_var_data_type != 'enum':
                 self.keys[variable]['Value'] = value
             else:
@@ -148,41 +176,21 @@ class LogicFileProcessor:
                     self.keys[variable]['Value'] = enum_range[value_int]
                 else:
                     self.keys[variable] = None        
+            '''
     
     def add_operation_command_to_keys(self)->None:
-        import TCAS_IO_Utility as tio_util
-        tiou = tio_util()
+        commands = self.load_commands(self.command_file_path)
         for variable in self.keys:
             var = self.keys[variable]
-            var_type = var['Type']
-            if var_type == 'internal':
-                if "Label" in variable:
-                    var['Command'] = self.get_command_of_label(variable)
-            elif var_type == 'function_call':
-                if "selected_Transponder" in variable:
-                    var['Command'] = tiou.get_command_of_select_transponder(variable)
-                elif "Label" in variable:
-                    var['Command'] = tiou.get_command_of_label(variable)
+            value = self.keys[variable]['Value']
+            if variable in commands and value in commands[variable]:
+                var['Command'] = commands[variable][value]
+            else:
+                var['Command'] = "Command not founded.To be added"
+
+                
                     
 
-    def get_command_of_label(self,variable):
-        label_command = []
-        if variable in self.keys:
-            var = self.keys[variable]
-            signal_name = self.bif_map[variable]['signal']
-            if var['Value'] == 'INVALID':
-                sig_value = 'fw'
-                comments = "//Set {} {}".format(variable, var['Value'])
-                label_command.append(comments)
-                command = "set {} {} \n".format(signal_name, sig_value)
-                label_command.append(command)
-            elif var['Value'] == 'VALID': 
-                sig_value = 'NORMAL'
-                comments = "//Set {} {}".format(var, var['Value'])
-                label_command.append(comments)
-                command = "set {} {} \n".format(signal_name, sig_value)
-                label_command.append(command)
-        return label_command
     
     def add_verify_command_to_statements(self):
         for state in self.statements:
@@ -208,23 +216,29 @@ class LogicFileProcessor:
         return cv_verify_command
             
     def wr_TPDescription_to_tp_file(self):
-        #tp_name = "TCAS_RBLT_TestProcedure" + ".bts"
-        #self.tp_file_name = os.path.join(r'./TCAS_IO_TDA/NewTestProcedure' , tp_name)
         if os.path.exists(self.tp_file_name):
             os.remove(self.tp_file_name)        
         with open(self.tp_file_name, 'a') as tp:
+            #write tp header
+            tp.write("// This work contains valuable confidential and proprietary information of \n" 
+                            "// Honeywell International Inc.  Disclosure, use or reproduction without the \n"
+                            "// prior written authorization of Honeywell International Inc is prohibited. \n"
+                            "// Copyright (c) 2023 Honeywell International Inc.  All rights reserved. \n\n\n")
+            tp.write("//*********Test Name:       *********\n")
+            tp.write("//*********Test Author:     ********* \n")
+            tp.write("//*********Update Date:     ********* \n\n")
+            #write tp description
             tp.write('\n'.join(self.TPDescription) + '\n')
-            
+                
     def wr_TCGroup_to_tp_file(self):
         for tc_name, tc_data  in self.TCGroup.items():
             with open(self.tp_file_name, 'a') as tp_file:
-                tp_file.write(f"'========================Test Case Description===============================\n\n")
-                tp_file.write(f"Test Case Name: {tc_name}\n")
-                
-                tp_file.write("Test Case Section:\n")
+                tp_file.write(f"//Test Case Name: {tc_name}\n")
+                tp_file.write(f"//========================Test Case Description===============================\n\n")                
+                tp_file.write("//Test Case Section:\n")
                 for line in tc_data['section']:
-                    tp_file.write(line + '\n')
-                    
+                    tp_file.write("//" + line)
+                '''  
                 tp_file.write("'Keys In Test Case:\n")
                 for key, value in tc_data['keys'].items():
                     tp_file.write(f"'   {key}:\n")
@@ -235,23 +249,25 @@ class LogicFileProcessor:
                 tp_file.write("'Statements in Test Case :\n")
                 for state in tc_data['statements'].items():
                     tp_file.write(f"'   {state}: \n")
-                tp_file.write(f"'========================End of Test Case Description===============================\n\n\n\n")  
+                '''
+                tp_file.write(f"//========================End of Test Case Description===============================\n\n")  
             self.wr_command_to_tp_file()
 
     def wr_command_to_tp_file(self):
         with open(self.tp_file_name, 'a') as tpc_file:
+            tpc_file.write(f"//***********************Excutable Commands of Test Case*******************************\n\n")                    
+            tpc_file.write(f"//-------------------------------------\n")
+            tpc_file.write(f"//Set up input : \n\n")
             for key, value in self.keys.items():
-                if 'Command' in value:
-                    tpc_file.write(f"'***************Excutable Commands of Test Case****************************\n\n")
-                    for command in value['Command']:                         
-                         tpc_file.write(f"{command} \n")
-                    tpc_file.write(f"'-------------------------------------\n\n")
-                         
+                if 'Command' in value:                        
+                    tpc_file.write(value['Command'] + "\n")
+            tpc_file.write(f"//-------------------------------------\n")
+            tpc_file.write(f"//Verify output : \n\n")                         
             for state, value in self.statements.items():
                 if 'command' in value:
                     for command in value['command']:
-                        tpc_file.write(f"{command} \n\n")
-                    tpc_file.write(f"'****************End of Excutable Commands of Test Case********************\n\n\n\n")
+                        tpc_file.write(command + "\n")
+            tpc_file.write(f"//************************End of Excutable Commands of Test Case**********************\n\n\n\n")
                 
     def print_class_member_value(self):
         print('LogicFileProcessor-TCGroup:')
