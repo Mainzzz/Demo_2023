@@ -278,14 +278,6 @@ class LogicFileProcessor:
         print(json.dumps(self.statements, indent=4))
         
     def process_file(self):
-        # Call the functions in sequence to perform the entire process
-        # Print current working directory
-        script_directory = os.path.dirname(os.path.abspath(__file__))
-        print("Current working directory1:", os.getcwd())
-        print("Absolute working directory:", script_directory)        
-        print("logic_file_path :", self.logic_file_path)
-        os.chdir(script_directory)
-        print("Current working directory2:", os.getcwd())
         self.build_parameter_map()
         self.buid_BIF_map()        
         self.select_lines_contains_useful_tc()
@@ -300,7 +292,6 @@ class LogicFileProcessor:
         self.add_verify_command_to_statements()
         self.wr_TCGroup_to_tp_file()
         
-        self.print_class_member_value()
 
 # Example usage:
 file_processor = LogicFileProcessor()

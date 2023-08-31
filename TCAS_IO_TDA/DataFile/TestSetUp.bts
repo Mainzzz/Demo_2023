@@ -1,0 +1,24 @@
+// This work contains valuable confidential and proprietary information of
+// Honeywell International Inc.  Disclosure, use or reproduction without the
+// prior written authorization of Honeywell International Inc is prohibited.
+// Copyright (c) 2021 Honeywell International Inc.  All rights reserved.
+//
+// Title: TestSetUp.bts
+//
+// Contributors:
+// MSK 	Mallinath Katekar   
+// AMC  Angela Chavez
+//
+// Audit trail:
+// 12-May-2021    AMC   Initial Version for TestSetUp
+//
+//   This file accepts following input parameters, as follows:
+//		None
+//
+// ****************************************************************************
+
+use views
+use dsp mon
+views remove all
+test clear
+delay 1000

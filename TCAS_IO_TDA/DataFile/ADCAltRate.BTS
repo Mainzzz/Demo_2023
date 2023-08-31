@@ -1,0 +1,73 @@
+// This work contains valuable confidential and proprietary information of
+// Honeywell International Inc.  Disclosure, use or reproduction without the
+// prior written authorization of Honeywell International Inc is prohibited.
+// Copyright (c) 2021 Honeywell International Inc.  All rights reserved.
+//
+// Title: ADCAltRate.BTS
+//
+// Contributors:
+// HD   Harsh Dedakiya
+//
+// Audit trail:
+// 7-Oct-2021    HD    Initial Version for ADC Altitude Rate
+//
+//   This file accepts following input parameters, as follows:
+//		None	
+//		
+//
+// ****************************************************************************
+
+// Name history file.
+use hist ADCAltRate.HST
+
+:START
+include TestSetUp.bts
+
+// Add BIF signals to BOSS monitor
+mon add ALTRATE1
+mon add ALTRATE2
+
+MSG "*********************TEST XPDR_ADC_Altitude_Rate_1****************************"
+MSG "Verification for XPDR ADC Input Signal Values"
+MSG "************************************************************"
+
+// Add CVT signals to BOSS views
+views add RawXADCAltRate1
+views add RawXADCAltRate2
+views add cmioXADCALTRATE1
+views add cmioXADCALTRATE2
+
+// Set ADC Altitude Rate
+set ALTRATE1 NORM
+set ALTRATE2 NORM
+set ALTRATE1 160
+set ALTRATE2 200
+delay 2000
+
+// Verify ADC Mach Speed Value and Validity State
+test if RawXADCAltRate1 IN 144 176
+test if RawXADCAltRate2 IN 184 216
+test if cmioXADCALTRATE1 IN 144 176
+test if cmioXADCALTRATE2 IN 184 216
+
+MSG "*********************TEST XPDR_ADC_Altitude_Rate_2****************************"
+MSG "Verification for XPDR ADC Input Signals Validity"
+MSG "************************************************************"
+
+include SSMValAll.BTS ALTRATE1 RawXADCAltRate1
+include SSMValAll.BTS ALTRATE2 RawXADCAltRate2
+include SSMValAll.BTS ALTRATE1 cmioXADCALTRATE1
+include SSMValAll.BTS ALTRATE2 cmioXADCALTRATE2
+
+
+:END
+// Removed BIF signals from BOSS monitor
+mon del ALTRATE1
+mon del ALTRATE2
+
+// Generate a test report and clear monitors.
+include TestCleanUp.bts
+
+// Close the history file.
+del hist
+DELAY 1000
